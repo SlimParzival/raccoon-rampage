@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Raccoon Rampage v0.5</title>
+<style>
+:root{--bg:#0d1216;--panel:#172027;--card:#223039;--gold:#ffd23f;--green:#52d17d;--red:#ef6258;--purple:#c64ce4;--muted:#aebbc4}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;touch-action:none}
+button{font:inherit;cursor:pointer}#app{width:100%;height:100%;position:relative;overflow:hidden}.screen{position:absolute;inset:0;display:none;overflow:auto}.screen.active{display:block}
+.menu{min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 50% 12%,#40512f 0,#1b2a20 28%,#0d1216 68%)}
+.menuBox{width:min(94vw,480px);text-align:center}.raccoon{font-size:90px;filter:drop-shadow(0 8px 5px #000);animation:bob 1.8s ease-in-out infinite}.logo{font-size:clamp(42px,12vw,76px);line-height:.84;font-weight:1000;letter-spacing:-4px;text-shadow:5px 6px 0 #000;transform:rotate(-2deg);margin:6px 0 18px}.logo span{display:block;color:var(--gold)}.tag{font-weight:900;color:#f4e6b2;margin:4px 0 18px}
+.primary{width:100%;padding:15px 18px;border:0;border-radius:14px;background:var(--gold);color:#111;font-weight:1000;font-size:20px;box-shadow:0 5px 0 #9c7b13;margin:7px 0}.primary:active{transform:translateY(3px);box-shadow:0 2px 0 #9c7b13}.secondary{padding:11px 14px;border:1px solid #ffffff25;border-radius:12px;background:#ffffff0c;color:#fff;font-weight:800;margin:5px}.row{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}.stat{margin-top:15px;color:var(--muted);font-size:13px}.badge{display:inline-block;background:#0008;border:1px solid #fff2;border-radius:999px;padding:5px 9px;margin:2px;font-size:11px;font-weight:900}
+.panel{width:min(94vw,600px);margin:0 auto;padding:18px}.panel h2{margin:8px 0 14px}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{background:var(--card);border:1px solid #ffffff16;border-radius:14px;padding:13px;color:#fff;text-align:left;min-height:112px;box-shadow:0 5px 0 #0004}.card.selected{outline:3px solid var(--gold)}.card .emoji{font-size:38px}.card b{display:block}.card small{color:#b7c4cb}.locked{opacity:.45}
+.upgradeRow{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:12px;margin:9px 0}.upgradeRow .uicon{font-size:30px}.upgradeRow .uinfo{flex:1}.upgradeRow b{display:block}.upgradeRow small{color:#aebbc4}.upgradeRow button{border:0;border-radius:10px;background:var(--gold);font-weight:1000;padding:9px 11px}.dots{letter-spacing:3px;color:var(--gold)}
+#gameScreen{background:#162017}#canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#hud{position:absolute;left:12px;right:58px;top:9px;z-index:3;text-shadow:0 2px 3px #000}.hudrow{display:flex;justify-content:space-between;font-weight:1000}.small{font-size:12px;opacity:.86}.bar{height:9px;background:#303632;border-radius:9px;overflow:hidden;margin-top:4px;border:1px solid #0008}.fill{height:100%;width:100%;background:var(--red)}.xp{background:var(--green)}.bossfill{background:var(--purple)}#bossHud{display:none;margin-top:5px}
+#pauseBtn{position:absolute;right:10px;top:9px;z-index:4;border:1px solid #fff4;background:#0009;color:#fff;border-radius:10px;padding:8px 11px;font-weight:1000}
+#joystick{position:absolute;left:18px;bottom:20px;width:122px;height:122px;border:2px solid #ffffff30;border-radius:50%;background:#ffffff0d;z-index:4}.knob{position:absolute;width:52px;height:52px;left:33px;top:33px;border-radius:50%;background:#ffffff4d;box-shadow:0 3px 12px #0008}
+#event{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:5;background:#a83232;padding:8px 14px;border-radius:999px;font-weight:1000;display:none;white-space:nowrap;box-shadow:0 4px 12px #0008}
+.overlay{position:absolute;inset:0;z-index:8;display:none;align-items:center;justify-content:center;background:#000b;padding:18px}.overlayBox{width:min(92vw,440px);max-height:90vh;overflow:auto;background:#151b20;border:1px solid #fff3;border-radius:18px;padding:20px;text-align:center;box-shadow:0 15px 50px #000}
+.upgrade{display:block;width:100%;padding:13px;border:1px solid #fff2;background:#26333b;color:#fff;border-radius:13px;margin:8px 0;text-align:left}.upgrade b{display:block;font-size:17px}.upgrade small{color:#b9c5ca}.resultBig{font-size:44px;font-weight:1000;color:var(--gold);line-height:.9;margin:5px 0 12px}.resultGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}.resultStat{background:#ffffff0b;border-radius:11px;padding:9px}.resultStat b{display:block;font-size:19px}.resultStat small{color:#aebbc4}.quote{color:#f0dfaa;font-weight:800;margin:12px 0}.toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.8);z-index:7;background:#000d;border:2px solid var(--gold);padding:10px 16px;border-radius:14px;font-weight:1000;opacity:0;pointer-events:none}.toast.show{animation:toast .8s ease-out}
+@keyframes bob{50%{transform:translateY(-8px) rotate(2deg)}}@keyframes toast{0%{opacity:0;transform:translate(-50%,-40%) scale(.8)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
+@media(min-width:700px){.cards{grid-template-columns:repeat(3,1fr)}}
+ .weaponGlow{animation:weaponGlow .7s ease-in-out infinite alternate}
+@keyframes weaponGlow{from{filter:drop-shadow(0 0 0 #ffd23f)}to{filter:drop-shadow(0 0 10px #ffd23f)}}
+.flashText{font-size:18px!important}
+.menuTip{margin:12px 0;padding:10px;border:1px solid #ffffff16;background:#ffffff08;border-radius:12px;color:#d7e0e4;font-size:12px;font-weight:800}
+</style>
+</head>
+<body>
+<div id="app">
+<section id="menu" class="screen active"><div class="menu"><div class="menuBox">
+<div class="raccoon" id="logoStart">🦝</div><div class="logo">RACCOON <span>RAMPAGE</span></div><div class="tag">EVERYBODY WANTS YOUR TRASH.</div>
+<button class="primary" id="playBtn">🗑️ START RAMPAGE</button>
+<div class="row"><button class="secondary" id="audioBtn">🔊 SOUND ON</button><button class="secondary" id="charBtn">🦝 CHARACTERS</button><button class="secondary" id="arenaBtn">🌆 ARENAS</button><button class="secondary" id="upgradeBtn">⬆️ UPGRADES</button><button class="secondary" id="achBtn">🏆 ACHIEVEMENTS</button></div>
+<div id="menuStats" class="stat"></div><div class="menuTip">🌙 Daily challenge: survive 90 seconds against 20% faster enemies for a bonus 250 coins.</div>
+<div><span class="badge">v0.5 TURBO BUILD</span><span class="badge">OFFLINE SAVE</span><span class="badge">MOBILE READY</span></div>
+</div></div></section>
+
+<section id="collection" class="screen"><div class="panel"><button class="secondary" data-back>← Back</button><h2 id="collectionTitle"></h2><div id="collectionCards" class="cards"></div></div></section>
+<section id="upgradesScreen" class="screen"><div class="panel"><button class="secondary" data-back>← Back</button><h2>⬆️ Permanent Upgrades</h2><div id="permUpgrades"></div></div></section>
+<section id="achScreen" class="screen"><div class="panel"><button class="secondary" data-back>← Back</button><h2>🏆 Achievements</h2><div id="achCards" class="cards"></div></div></section>
+
+<section id="gameScreen" class="screen">
+<canvas id="canvas"></canvas><div id="hud"><div class="hudrow"><span>🦝 RAMPAGE</span><span id="timer">0:00</span></div><div id="stats" class="small"></div><div id="weaponHud" class="small">🛡️ TRASH LID</div><div id="challengeHud" class="small"></div><div class="bar"><div id="hpFill" class="fill"></div></div><div class="bar"><div id="xpFill" class="fill xp"></div></div><div id="bossHud"><div class="small" id="bossName">THE GARBAGE KING</div><div class="bar"><div id="bossFill" class="fill bossfill"></div></div></div></div>
+<button id="pauseBtn">Ⅱ</button><div id="event"></div><div id="joystick"><div id="knob" class="knob"></div></div><div id="toast" class="toast"></div>
+</section>
+
+<div id="levelOverlay" class="overlay"><div class="overlayBox"><h2>🔥 LEVEL UP!</h2><div class="small">Pick one upgrade</div><div id="upgradeChoices"></div></div></div>
+<div id="pauseOverlay" class="overlay"><div class="overlayBox"><h2>⏸️ PAUSED</h2><button class="primary" id="resumeBtn">RESUME</button><button class="secondary" id="quitBtn">QUIT RUN</button></div></div>
+<div id="resultOverlay" class="overlay"><div class="overlayBox"><div class="resultBig">YOU GOT TRASHED</div><div id="defeatText"></div><div id="resultStats" class="resultGrid"></div><div id="quote" class="quote"></div><button class="primary" id="againBtn">🦝 RUN IT BACK</button><button class="secondary" id="resultMenuBtn">MENU</button></div></div>
+</div>
+
+<script>
+"use strict";
+
+const WEAPON_EVOS=[
+ {id:"mega",need:["damage","fire"],name:"🗑️ MEGA TRASH CANNON",desc:"Lids become giant, heavy-hitting discs.",apply:p=>{p.damage*=1.65;p.shotSize=15}},
+ {id:"pizzaStorm",need:["pizza","fire"],name:"🍕 PIZZA STORM",desc:"Pizza wheels orbit and fire outward.",apply:p=>{p.pizzaLevel=2;p.fireRate*=.75}},
+ {id:"fishFrenzy",need:["fish","magnet"],name:"🐟 FISH FRENZY",desc:"Homing fish split into two on hit.",apply:p=>{p.fishLevel=2}},
+ {id:"fortress",need:["shield","health"],name:"🛡️ DUMPSTER FORTRESS",desc:"Shield blocks every 5 seconds.",apply:p=>{p.shieldInterval=5;p.maxHp+=35;p.hp=p.maxHp}}
+];
+const CHALLENGE={name:"MIDNIGHT TRASH RUN",desc:"Survive 90 seconds with +20% enemy speed.",bonus:250};
+
+function applyChallenge(){
+  G.challenge=CHALLENGE;
+  $("challengeHud").textContent="🌙 "+CHALLENGE.name;
+}
+
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rand=(a,b)=>Math.random()*(b-a)+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+/* ===== v0.5 GAME JUICE ===== */
+let audioOn = true; try { audioOn = localStorage.getItem("rrAudio") !== "off"; } catch(e) {}
+let audioCtx = null;
+function sound(type){
+  if(!audioOn) return;
+  try{
+    audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    const now=audioCtx.currentTime;
+    const cfg={hit:[180,.045,"square"],coin:[880,.07,"sine"],level:[520,.16,"triangle"],boss:[90,.28,"sawtooth"],death:[70,.5,"sawtooth"],pickup:[640,.04,"sine"]}[type]||[300,.05,"sine"];
+    o.type=cfg[2];o.frequency.setValueAtTime(cfg[0],now);
+    if(type==="level")o.frequency.exponentialRampToValueAtTime(920,now+cfg[1]);
+    if(type==="boss")o.frequency.exponentialRampToValueAtTime(40,now+cfg[1]);
+    if(type==="death")o.frequency.exponentialRampToValueAtTime(25,now+cfg[1]);
+    g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.09,now+.008);g.gain.exponentialRampToValueAtTime(.0001,now+cfg[1]);
+    o.connect(g).connect(audioCtx.destination);o.start(now);o.stop(now+cfg[1]+.02);
+  }catch(e){}
+}
+$("audioBtn").onclick=()=>{
+  audioOn=!audioOn;try { localStorage.setItem("rrAudio",audioOn?"on":"off"); } catch(e) {}
+  $("audioBtn").textContent=audioOn?"🔊 SOUND ON":"🔇 SOUND OFF";
+  if(audioOn)sound("coin");
+};
+$("audioBtn").textContent=audioOn?"🔊 SOUND ON":"🔇 SOUND OFF";
+
+
+const fmtTime=s=>{s=Math.max(0,Math.floor(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+
+const SKINS=[
+{id:"classic",name:"Trash Panda",emoji:"🦝",cost:0,hp:100,speed:1,damage:1,desc:"The original menace."},
+{id:"pizza",name:"Pizza Raccoon",emoji:"🍕",cost:250,hp:95,speed:1.08,damage:1.1,desc:"Grease-powered chaos."},
+{id:"ninja",name:"Ninja Raccoon",emoji:"🥷",cost:500,hp:85,speed:1.22,damage:1.18,desc:"Fast. Sneaky. Still steals trash."},
+{id:"cowboy",name:"Cowboy Raccoon",emoji:"🤠",cost:800,hp:115,speed:.96,damage:1.3,desc:"Yee-haw, garbage boy."},
+{id:"astronaut",name:"Astronaut Raccoon",emoji:"👨‍🚀",cost:1200,hp:125,speed:1.02,damage:1.22,desc:"One small step for trashkind."},
+{id:"business",name:"Business Raccoon",emoji:"🕴️",cost:1800,hp:105,speed:1.12,damage:1.15,desc:"He has a meeting at 3."}
+];
+const ARENAS=[
+{id:"alley",name:"Trash Alley",emoji:"🌃",cost:0,desc:"Classic city garbage chaos."},
+{id:"dump",name:"The Dump",emoji:"⛰️",cost:700,desc:"More elites. More loot."},
+{id:"rooftop",name:"Rooftop Rumble",emoji:"🏙️",cost:1400,desc:"Faster enemies. Tiny arena."}
+];
+const PERMS=[
+{id:"health",name:"Thick Hide",icon:"❤️",base:100,step:18,max:5,cost:i=>120+i*100,desc:"+18 max HP"},
+{id:"damage",name:"Meaner Lids",icon:"💥",base:0,step:.12,max:5,cost:i=>150+i*125,desc:"+12% damage"},
+{id:"speed",name:"Sneaky Feet",icon:"👟",base:0,step:.08,max:5,cost:i=>140+i*110,desc:"+8% move speed"},
+{id:"coins",name:"Shiny Sense",icon:"🪙",base:0,step:.1,max:5,cost:i=>180+i*140,desc:"+10% coins"},
+{id:"xp",name:"Trash Brain",icon:"🧠",base:0,step:.1,max:5,cost:i=>180+i*140,desc:"+10% XP"},
+{id:"luck",name:"Dumpster Luck",icon:"🍀",base:0,step:.06,max:5,cost:i=>220+i*160,desc:"+6% elite/rare chance"}
+];
+const UPGRADES=[
+{id:"damage",icon:"💥",name:"MEGA LID",desc:"+25% weapon damage",apply:p=>p.damage*=1.25},
+{id:"speed",icon:"💨",name:"SPEED DEMON",desc:"+18% move speed",apply:p=>p.speed*=1.18},
+{id:"health",icon:"❤️",name:"BEEFIER PANDA",desc:"+25 max HP and heal",apply:p=>{p.maxHp+=25;p.hp=p.maxHp}},
+{id:"fire",icon:"🔥",name:"HOT TRASH",desc:"+1 projectile every 4 attacks",apply:p=>p.fireRate*=.88},
+{id:"magnet",icon:"🧲",name:"TRASH MAGNET",desc:"XP/coins pickup radius +45",apply:p=>p.pickup+=45},
+{id:"pizza",icon:"🍕",name:"PIZZA WHEEL",desc:"Adds a spinning pizza projectile",apply:p=>p.pizza=true},
+{id:"fish",icon:"🐟",name:"FISH LAUNCHER",desc:"Launches a homing fish",apply:p=>p.fish=true},
+{id:"shield",icon:"🛡️",name:"CAN SHIELD",desc:"Blocks the next hit every 8 sec",apply:p=>p.shield=true}
+];
+const ACH=[
+{id:"survive60",name:"ONE MINUTE MENACE",desc:"Survive 60 seconds.",check:s=>s.time>=60},
+{id:"kills100",name:"TRASH COLLECTOR",desc:"Defeat 100 enemies in one run.",check:s=>s.kills>=100},
+{id:"turkey20",name:"TURKEY HATER",desc:"Defeat 20 turkeys in one run.",check:s=>s.turkeys>=20},
+{id:"boss",name:"BOSS SLAYER",desc:"Defeat the Garbage King.",check:s=>s.bosses>=1},
+{id:"combo20",name:"COMBO GREMLIN",desc:"Reach a 20x combo.",check:s=>s.bestCombo>=20},
+{id:"coins500",name:"SHINY HOARDER",desc:"Earn 500 coins in one run.",check:s=>s.runCoins>=500},
+{id:"level10",name:"FULL GARBAGE DEGREE",desc:"Reach level 10.",check:s=>s.level>=10},
+{id:"elite10",name:"ELITE PROBLEM",desc:"Defeat 10 elite enemies.",check:s=>s.elites>=10}
+];
+let save=JSON.parse(localStorage.getItem("rr04")||"null")||{coins:0,best:0,skin:"classic",arena:"alley",unlockedSkins:["classic"],unlockedArenas:["alley"],perm:{health:0,damage:0,speed:0,coins:0,xp:0,luck:0},ach:[]};
+function persist(){localStorage.setItem("rr04",JSON.stringify(save))}
+function skin(){return SKINS.find(x=>x.id===save.skin)||SKINS[0]}
+function arena(){return ARENAS.find(x=>x.id===save.arena)||ARENAS[0]}
+function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active")}
+function updateMenu(){ $("menuStats").textContent=`🪙 ${save.coins} coins • 🏆 Best ${fmtTime(save.best)} • ${skin().name} • ${arena().name}` }
+
+$("playBtn").onclick=startRun;
+$("charBtn").onclick=()=>renderCollection("characters");
+$("arenaBtn").onclick=()=>renderCollection("arenas");
+$("upgradeBtn").onclick=renderPerms;
+$("achBtn").onclick=renderAchievements;
+document.querySelectorAll("[data-back]").forEach(b=>b.onclick=()=>{updateMenu();showScreen("menu")});
+function renderCollection(type){
+$("collectionTitle").textContent=type==="characters"?"🦝 Characters":"🌆 Arenas";
+const arr=type==="characters"?SKINS:ARENAS;
+$("collectionCards").innerHTML=arr.map(x=>{
+const unlocked=type==="characters"?save.unlockedSkins.includes(x.id):save.unlockedArenas.includes(x.id);
+const selected=(type==="characters"?save.skin:save.arena)===x.id;
+return `<div class="card ${selected?"selected ":""}${unlocked?"":"locked"}"><div class="emoji">${x.emoji}</div><b>${x.name}</b><small>${x.desc}</small><br><small>${unlocked?(selected?"SELECTED":"Tap to select"):"🔒 "+x.cost+" coins"}</small></div>`;
+}).join("");
+[...$("collectionCards").children].forEach((el,i)=>el.onclick=()=>{
+const x=arr[i], unlocked=type==="characters"?save.unlockedSkins.includes(x.id):save.unlockedArenas.includes(x.id);
+if(unlocked){if(type==="characters")save.skin=x.id;else save.arena=x.id;persist();renderCollection(type)}
+else if(save.coins>=x.cost){save.coins-=x.cost;(type==="characters"?save.unlockedSkins:save.unlockedArenas).push(x.id);if(type==="characters")save.skin=x.id;else save.arena=x.id;persist();renderCollection(type)}
+else flash(`Need ${x.cost-save.coins} more coins!`);
+});
+showScreen("collection");
+}
+function renderPerms(){
+$("permUpgrades").innerHTML=PERMS.map(x=>{const lv=save.perm[x.id],max=lv>=x.max,c=x.cost(lv);return `<div class="upgradeRow"><div class="uicon">${x.icon}</div><div class="uinfo"><b>${x.name} <span class="dots">${"●".repeat(lv)}${"○".repeat(x.max-lv)}</span></b><small>${x.desc} • ${max?"MAX":c+" coins"}</small></div><button ${max||save.coins<c?"disabled":""} data-u="${x.id}">${max?"MAX":"BUY"}</button></div>`}).join("");
+document.querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{const id=b.dataset.u,x=PERMS.find(z=>z.id===id),lv=save.perm[id],c=x.cost(lv);if(lv<x.max&&save.coins>=c){save.coins-=c;save.perm[id]++;persist();renderPerms();updateMenu()}});
+showScreen("upgradesScreen");
+}
+function renderAchievements(){
+$("achCards").innerHTML=ACH.map(x=>{const done=save.ach.includes(x.id);return `<div class="card ${done?"selected":""}"><div class="emoji">${done?"🏆":"🔒"}</div><b>${x.name}</b><small>${x.desc}</small><br><small>${done?"UNLOCKED":"Not yet"}</small></div>`}).join("");
+showScreen("achScreen");
+}
+function flash(t){const e=$("toast");e.textContent=t;e.classList.remove("show");void e.offsetWidth;e.classList.add("show")}
+
+let G=null, raf=0,last=0,joy={x:0,y:0},keys={};
+const canvas=$("canvas"),ctx=canvas.getContext("2d");
+function resize(){canvas.width=innerWidth*devicePixelRatio;canvas.height=innerHeight*devicePixelRatio;canvas.style.width=innerWidth+"px";canvas.style.height=innerHeight+"px";ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
+addEventListener("resize",resize);resize();
+addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;if(e.key==="Escape")togglePause()});
+addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+
+function startRun(){
+cancelAnimationFrame(raf);showScreen("gameScreen");
+const sk=skin(), ar=arena(), plev=save.perm;
+G={time:0,level:1,xp:0,nextXp:55,hp:sk.hp+plev.health*18,maxHp:sk.hp+plev.health*18,speed:155*sk.speed*(1+plev.speed*.08),damage:16*sk.damage*(1+plev.damage*.12),fireRate:.58,fireTimer:.05,pickup:70,pizza:false,fish:false,shield:false,shieldCd:0,shieldInterval:8,pizzaLevel:1,fishLevel:1,shotSize:9,weaponEvos:[],
+player:{x:innerWidth/2,y:innerHeight/2,r:19,inv:0,hitFlash:0},enemies:[],shots:[],loot:[],parts:[],texts:[],kills:0,turkeys:0,bosses:0,elites:0,runCoins:0,bestCombo:0,combo:0,comboTimer:0,lastDefeat:"an angry turkey",spawn:0,boss:null,nextBoss:60,bossPhase:1,event:null,eventTimer:0,eventClock:rand(18,28),paused:false,shake:0,arena:ar,ended:false,enemyId:0,chaosSeed:0};
+$("bossHud").style.display="none";$("event").style.display="none";$("timer").textContent="0:00";applyChallenge();updateHud();sound("pickup");
+last=performance.now();raf=requestAnimationFrame(loop);
+}
+function loop(now){if(!G||G.ended)return;const dt=Math.min(.035,(now-last)/1000);last=now;if(!G.paused)update(dt);draw();raf=requestAnimationFrame(loop)}
+function update(dt){
+G.time+=dt;G.spawn-=dt;G.fireTimer-=dt;G.shake=Math.max(0,G.shake-dt*28);G.player.inv=Math.max(0,G.player.inv-dt);G.player.hitFlash=Math.max(0,G.player.hitFlash-dt);G.shieldCd=Math.max(0,G.shieldCd-dt);G.comboTimer-=dt;
+if(G.comboTimer<=0)G.combo=0;
+if(G.event){G.eventTimer-=dt;if(G.eventTimer<=0){G.event=null;$("event").style.display="none"}}
+G.eventClock-=dt;if(G.eventClock<=0&&!G.event){startChaos();G.eventClock=rand(24,38)}
+if(G.time>=G.nextBoss&&!G.boss){spawnBoss();G.nextBoss+=75}
+const diff=1+G.time/115;
+if(G.spawn<=0){spawnEnemy(diff);G.spawn=Math.max(.22, .72-G.time*.0025)*(G.arena.id==="rooftop"?0.9:1)}
+movePlayer(dt);autoFire();
+for(const e of G.enemies)moveEnemy(e,dt);
+for(const s of G.shots)moveShot(s,dt);
+for(const l of G.loot)moveLoot(l,dt);
+if(G.boss)moveBoss(dt);
+updateParticles(dt);updateTexts(dt);
+G.shots=G.shots.filter(s=>s.life>0);G.enemies=G.enemies.filter(e=>e.hp>0);G.loot=G.loot.filter(l=>!l.dead);
+if(G.boss&&G.boss.hp<=0){killBoss()}
+if(G.hp<=0){endRun();return}
+updateHud();
+}
+function movePlayer(dt){
+let x=joy.x+(keys["d"]?1:0)-(keys["a"]?1:0),y=joy.y+(keys["s"]?1:0)-(keys["w"]?1:0),m=Math.hypot(x,y);if(m>1){x/=m;y/=m}
+G.player.x=clamp(G.player.x+x*G.speed*dt,18,innerWidth-18);G.player.y=clamp(G.player.y+y*G.speed*dt,70,innerHeight-18);
+}
+function autoFire(){if(G.fireTimer>0)return;G.fireTimer=G.fireRate;let target=nearestTarget();if(!target)return;let a=Math.atan2(target.y-G.player.y,target.x-G.player.x),n=G.fireRate<.52?2:1;
+for(let i=0;i<n;i++){let aa=a+(i-(n-1)/2)*.11;G.shots.push({x:G.player.x,y:G.player.y,vx:Math.cos(aa)*380,vy:Math.sin(aa)*380,r:9,life:1.8,dmg:G.damage,type:"lid"})}
+if(G.pizza){G.shots.push({x:G.player.x,y:G.player.y,vx:Math.cos(a+.7)*280,vy:Math.sin(a+.7)*280,r:12,life:1.6,dmg:G.damage*.7,type:"pizza"})}
+if(G.fish){G.shots.push({x:G.player.x,y:G.player.y,vx:Math.cos(a-.7)*300,vy:Math.sin(a-.7)*300,r:10,life:1.8,dmg:G.damage*.55,type:"fish",homing:true})}
+}
+function nearestTarget(){let all=G.enemies.slice();if(G.boss)all.push(G.boss);let best=null,bd=1e9;for(const e of all){let d=(e.x-G.player.x)**2+(e.y-G.player.y)**2;if(d<bd){bd=d;best=e}}return best}
+function spawnEnemy(diff){
+const types=[["rat","🐀",18,42,8],["squirrel","🐿️",25,52,10],["turkey","🦃",42,38,13],["dog","🐕",55,65,18]];
+let t=pick(types), side=Math.floor(rand(0,4)),x=side===0?-25:side===1?innerWidth+25:rand(0,innerWidth),y=side===2?-25:side===3?innerHeight+25:rand(70,innerHeight);
+let elite=Math.random()<(0.035+save.perm.luck*.06+G.time/1800),hp=t[2]*diff*(elite?2.6:1),speed=t[3]*(1+G.time/240)*(elite?1.12:1);
+if(G.arena.id==="dump")elite=elite||Math.random()<.035;
+if(G.time>35 && Math.random()<.055){
+  t=["rival","🦝",95,72,20];
+}
+G.enemies.push({id:++G.enemyId,type:t[0],emoji:elite?"👹":t[1],x,y,r:elite?20:16,hp,maxHp:hp,speed,dmg:t[4]*(elite?1.5:1),elite});
+}
+function moveEnemy(e,dt){
+let a=Math.atan2(G.player.y-e.y,G.player.x-e.x),sp=e.speed;
+if(G.event==="turkey"&&e.type==="turkey")sp*=1.45;
+e.x+=Math.cos(a)*sp*dt;e.y+=Math.sin(a)*sp*dt;
+if(Math.hypot(e.x-G.player.x,e.y-G.player.y)<e.r+G.player.r)hurt(e.dmg,e.type,e);
+}
+function moveShot(s,dt){
+if(s.homing){let t=nearestTarget();if(t){let a=Math.atan2(t.y-s.y,t.x-s.x),cur=Math.atan2(s.vy,s.vx),da=Math.atan2(Math.sin(a-cur),Math.cos(a-cur));cur+=clamp(da,-dt*4,dt*4);s.vx=Math.cos(cur)*Math.hypot(s.vx,s.vy);s.vy=Math.sin(cur)*Math.hypot(s.vx,s.vy)}}
+s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;
+let targets=G.enemies.slice();if(G.boss)targets.push(G.boss);
+for(const e of targets){if(e.hp<=0)continue;if(Math.hypot(s.x-e.x,s.y-e.y)<s.r+e.r){e.hp-=s.dmg;s.life=0;sound("hit");burst(s.x,s.y,s.type==="pizza"?"#ffd23f":"#ffffff",6);textPop(e.x,e.y,Math.round(s.dmg));if(e.hp<=0)defeat(e);break}}
+}
+function defeat(e){
+if(e===G.boss)return;
+G.kills++;G.lastDefeat=e.elite?"an ELITE "+e.type:e.type==="turkey"?"Turkey #"+G.kills:e.type==="rival"?"your jealous rival raccoon":e.type;
+if(e.type==="turkey")G.turkeys++;if(e.elite)G.elites++;
+G.combo=Math.min(99,G.combo+1);G.comboTimer=2.7;G.bestCombo=Math.max(G.bestCombo,G.combo);
+const xp=(e.elite?18:8)*(1+save.perm.xp*.1),coins=Math.max(1,Math.round((e.elite?4:1)*(1+save.perm.coins*.1)));
+drop(e.x,e.y,xp,coins);burst(e.x,e.y,e.elite?"#c64ce4":"#9bd56b",e.elite?18:9);G.shake=Math.max(G.shake,e.elite?8:3);
+}
+function drop(x,y,xp,coins){G.loot.push({x,y,r:8,type:"xp",value:xp,life:12,dead:false});if(Math.random()<.45||G.combo>=8)G.loot.push({x:x+rand(-10,10),y:y+rand(-10,10),r:7,type:"coin",value:coins,life:12,dead:false})}
+function moveLoot(l,dt){
+l.life-=dt;if(l.life<=0){l.dead=true;return}let d=Math.hypot(l.x-G.player.x,l.y-G.player.y),rad=G.pickup+(G.arena.id==="dump"?15:0);
+if(d<rad){let a=Math.atan2(G.player.y-l.y,G.player.x-l.x),sp=clamp(100+(rad-d)*3,100,440);l.x+=Math.cos(a)*sp*dt;l.y+=Math.sin(a)*sp*dt}
+if(d<22){l.dead=true;if(l.type==="xp"){G.xp+=l.value;sound("pickup")}else{G.runCoins+=l.value;save.coins+=l.value;persist();textPop(G.player.x,G.player.y,"+"+l.value+" 🪙")}}
+if(G.xp>=G.nextXp)levelUp();
+checkWeaponEvolutions();
+}
+function levelUp(){sound("level");G.xp-=G.nextXp;G.level++;G.nextXp=Math.round(G.nextXp*1.22);G.paused=true;showChoices()}
+function showChoices(){const choices=[...UPGRADES].sort(()=>Math.random()-.5).slice(0,3);$("upgradeChoices").innerHTML=choices.map((u,i)=>`<button class="upgrade" data-c="${i}">${u.icon} <b>${u.name}</b><small>${u.desc}</small></button>`).join("");$("levelOverlay").style.display="flex";document.querySelectorAll("[data-c]").forEach((b,i)=>b.onclick=()=>{choices[i].apply(G);$("levelOverlay").style.display="none";G.paused=false;flash("UPGRADE LOCKED IN!")})}
+
+function checkWeaponEvolutions(){
+  for(const evo of WEAPON_EVOS){
+    if(G.weaponEvos.includes(evo.id)) continue;
+    const owned=UPGRADES.filter(u=>u.id).filter(u=>false);
+    const haveDamage=G.damage>22, haveFire=G.fireRate<.54, havePizza=G.pizza, haveFish=G.fish, haveMagnet=G.pickup>100, haveShield=G.shield, haveHealth=G.maxHp>125;
+    const ok=evo.need.every(n=>({damage:haveDamage,fire:haveFire,pizza:havePizza,fish:haveFish,magnet:haveMagnet,shield:haveShield,health:haveHealth}[n]));
+    if(ok){G.weaponEvos.push(evo.id);evo.apply(G);flash(evo.name);sound("level");}
+  }
+  const names=G.weaponEvos.map(id=>WEAPON_EVOS.find(e=>e.id===id)?.name).filter(Boolean);
+  $("weaponHud").textContent=(names.length?names[names.length-1]:"🛡️ TRASH LID");
+}
+
+function hurt(dmg,source,e){
+if(G.player.inv>0)return;
+if(G.shield&&G.shieldCd<=0){G.shieldCd=8;G.player.inv=.35;flash("🛡️ CAN SHIELD BLOCK!");return}
+G.hp-=dmg;sound("hit");G.player.inv=.45;G.player.hitFlash=.2;G.shake=Math.max(G.shake,10);burst(G.player.x,G.player.y,"#ef6258",12);textPop(G.player.x,G.player.y,Math.round(-dmg));
+if(e){let a=Math.atan2(e.y-G.player.y,e.x-G.player.x);e.x+=Math.cos(a)*30;e.y+=Math.sin(a)*30}
+}
+function spawnBoss(){
+const bossIndex=Math.floor(G.time/75)%3;
+if(bossIndex===1){spawnChefCrow();return}
+if(bossIndex===2){spawnOpossum();return}
+const hp=950*(1+G.time/160);G.boss={name:"THE GARBAGE KING",emoji:"🚛",x:innerWidth/2,y:110,r:32,hp,maxHp:hp,speed:48,shot:1.2,phase:1,charge:4};
+$("bossName").textContent="🚛 THE GARBAGE KING";$("bossHud").style.display="block";flash("🚨 GARBAGE KING INCOMING!")
+}
+
+function spawnChefCrow(){
+  const hp=1250*(1+G.time/180);
+  G.boss={name:"CHEF CROW",emoji:"🐦‍⬛",x:innerWidth/2,y:120,r:30,hp,maxHp:hp,speed:68,shot:1.0,phase:1,charge:3,chef:true};
+  $("bossName").textContent="🐦‍⬛ CHEF CROW";$("bossHud").style.display="block";flash("🍳 CHEF CROW SERVES PAIN!");sound("boss");
+}
+function spawnOpossum(){
+  const hp=1500*(1+G.time/170);
+  G.boss={name:"MUTANT OPOSSUM",emoji:"🦨",x:innerWidth/2,y:120,r:34,hp,maxHp:hp,speed:54,shot:.8,phase:1,charge:4,opossum:true};
+  $("bossName").textContent="🦨 MUTANT OPOSSUM";$("bossHud").style.display="block";flash("☢️ MUTANT OPOSSUM ESCAPED!");sound("boss");
+}
+
+function moveBoss(dt){
+const b=G.boss;if(!b)return;
+b.phase=b.hp<b.maxHp*.66?2:b.hp<b.maxHp*.33?3:1;
+let a=Math.atan2(G.player.y-b.y,G.player.x-b.x);
+let base=b.chef?62:b.opossum?52:58;
+b.speed=(b.phase===3?base*1.65:base);
+if(b.opossum && b.phase===2) b.speed*=1.3;
+b.x+=Math.cos(a)*b.speed*dt;b.y+=Math.sin(a)*b.speed*dt;
+b.shot-=dt;b.charge-=dt;
+if(b.shot<=0){
+  b.shot=b.chef?(b.phase===1?1.0:.55):b.opossum?.65:(b.phase===1?1.25:.72);
+  bossBurst(b.phase);
+}
+if(b.charge<=0&&b.phase>=2){
+  b.charge=b.opossum?2.5:(b.phase===2?5:3.2);
+  burst(b.x,b.y,b.chef?"#ffd23f":"#c64ce4",30);G.shake=12;
+  if(b.chef){for(let i=0;i<4;i++)spawnTurkey()}
+}
+if(Math.hypot(b.x-G.player.x,b.y-G.player.y)<b.r+G.player.r)hurt(b.opossum?25:20,b.name,b);
+}
+function bossBurst(phase){
+const count=phase===1?7:phase===2?10:14;
+for(let i=0;i<count;i++){
+ let a=i*Math.PI*2/count+G.time*.35;
+ let speed=G.boss.opossum?190:G.boss.chef?175:150;
+ G.shots.push({x:G.boss.x,y:G.boss.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:7,life:3,dmg:phase===3?16:11,type:G.boss.chef?"food":"trash",enemyShot:true})
+}
+}
+function killBoss(){G.bosses++;sound("boss");G.lastDefeat="THE GARBAGE KING";G.boss=null;$("bossHud").style.display="none";G.runCoins+=120;save.coins+=120;persist();burst(G.player.x,G.player.y,"#ffd23f",60);flash("👑 GARBAGE KING DEFEATED! +120 🪙")}
+function startChaos(){
+const type=pick(["meteor","turkey","blackout"]);G.event=type;G.eventTimer=8;$("event").textContent=type==="meteor"?"☄️ METEOR STORM!":type==="turkey"?"🦃 TURKEY RIOT!":"🌑 BLACKOUT!";$("event").style.display="block";
+if(type==="turkey")for(let i=0;i<8;i++)spawnTurkey();
+if(type==="meteor")for(let i=0;i<5;i++)setTimeout(()=>meteor(),Math.random()*5500);
+}
+function spawnTurkey(){let x=rand(30,innerWidth-30),y=rand(80,innerHeight-30);G.enemies.push({id:++G.enemyId,type:"turkey",emoji:"🦃",x,y,r:16,hp:70,maxHp:70,speed:62,dmg:14,elite:false})}
+function meteor(){if(!G||G.ended)return;let x=rand(20,innerWidth-20),y=rand(80,innerHeight-20);burst(x,y,"#ef6258",20);for(const e of G.enemies)if(Math.hypot(e.x-x,e.y-y)<80)e.hp-=70;if(Math.hypot(G.player.x-x,G.player.y-y)<75)hurt(25,"meteor")}
+function updateParticles(dt){for(const p of G.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.94;p.vy*=.94;p.life-=dt}G.parts=G.parts.filter(p=>p.life>0)}
+function burst(x,y,color,n){for(let i=0;i<n;i++){let a=rand(0,Math.PI*2),s=rand(30,180);G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(.25,.7),r:rand(2,5),color})}}
+function textPop(x,y,t){G.texts.push({x,y,text:String(t),life:.8,vy:-30})}
+function updateTexts(dt){for(const t of G.texts){t.y+=t.vy*dt;t.life-=dt}G.texts=G.texts.filter(t=>t.life>0)}
+function draw(){
+const w=innerWidth,h=innerHeight;ctx.save();let sx=G?rand(-G.shake,G.shake):0,sy=G?rand(-G.shake,G.shake):0;ctx.translate(sx,sy);
+drawBackground(w,h);
+if(G){for(const l of G.loot)drawLoot(l);for(const e of G.enemies)drawEnemy(e);if(G.boss)drawBoss(G.boss);for(const s of G.shots)drawShot(s);drawPlayer();for(const p of G.parts){ctx.globalAlpha=clamp(p.life*2,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;for(const t of G.texts){ctx.globalAlpha=clamp(t.life*2,0,1);ctx.fillStyle="#fff";ctx.font="900 14px system-ui";ctx.textAlign="center";ctx.fillText(t.text,t.x,t.y)}ctx.globalAlpha=1;if(G.event==="blackout"){ctx.fillStyle="#0009";ctx.fillRect(0,0,w,h);ctx.globalAlpha=.75;ctx.fillStyle="#fff";ctx.font="900 18px system-ui";ctx.textAlign="center";ctx.fillText("🌑 THE LIGHTS ARE OUT!",w/2,h*.25);ctx.globalAlpha=1}}
+ctx.restore();
+}
+function drawBackground(w,h){
+ctx.fillStyle=G&&G.arena.id==="dump"?"#243027":G&&G.arena.id==="rooftop"?"#101a2b":"#172218";ctx.fillRect(-20,-20,w+40,h+40);
+ctx.globalAlpha=.18;ctx.strokeStyle="#d8e6c8";ctx.lineWidth=1;let grid=42;for(let x=-grid;x<w+grid;x+=grid){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}for(let y=60;y<h+grid;y+=grid){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}ctx.globalAlpha=1;
+for(let i=0;i<10;i++){let x=(i*137+37)%w,y=80+(i*89)%Math.max(100,h-100);ctx.globalAlpha=.35;ctx.font="24px serif";ctx.fillText(G&&G.arena.id==="dump"?"🗑️":G&&G.arena.id==="rooftop"?"🧱":"🏙️",x,y)}ctx.globalAlpha=1;
+}
+function drawPlayer(){let p=G.player;ctx.save();ctx.translate(p.x,p.y);ctx.globalAlpha=p.inv>0&&Math.floor(G.time*20)%2===0?.35:1;ctx.font="34px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(skin().emoji,0,0);ctx.globalAlpha=1;if(G.shield&&G.shieldCd<=0){ctx.strokeStyle="#55d8ff";ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,28,0,Math.PI*2);ctx.stroke()}ctx.restore()}
+function drawEnemy(e){ctx.save();ctx.translate(e.x,e.y);ctx.textAlign="center";ctx.textBaseline="middle";ctx.font=(e.elite?31:26)+"px serif";ctx.fillText(e.emoji,0,0);if(e.elite){ctx.strokeStyle="#c64ce4";ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,e.r+5,0,Math.PI*2);ctx.stroke()}if(e.hp<e.maxHp){ctx.fillStyle="#000a";ctx.fillRect(-18,-e.r-9,36,4);ctx.fillStyle=e.elite?"#c64ce4":"#ef6258";ctx.fillRect(-18,-e.r-9,36*clamp(e.hp/e.maxHp,0,1),4)}ctx.restore()}
+function drawBoss(b){ctx.save();ctx.translate(b.x,b.y);ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="58px serif";ctx.fillText(b.emoji,0,0);ctx.strokeStyle=b.phase===3?"#ff4b42":"#c64ce4";ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,42,0,Math.PI*2);ctx.stroke();ctx.restore()}
+function drawShot(s){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Math.atan2(s.vy,s.vx));ctx.font=(s.type==="pizza"?24:s.type==="fish"?22:s.type==="food"?22:20)+"px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(s.enemyShot?(s.type==="food"?"🍳":"🗑️"):s.type==="pizza"?"🍕":s.type==="fish"?"🐟":"🛡️",0,0);ctx.restore()}
+function drawLoot(l){ctx.font=l.type==="coin"?"18px serif":"16px serif";ctx.textAlign="center";ctx.fillText(l.type==="coin"?"🪙":"✨",l.x,l.y)}
+function updateHud(){$("timer").textContent=fmtTime(G.time);$("stats").textContent=`❤️ ${Math.ceil(Math.max(0,G.hp))}/${Math.ceil(G.maxHp)} • LV ${G.level} • ☠️ ${G.kills} • 🔥 ${G.combo>1?G.combo+"x":""}`;$("hpFill").style.width=clamp(G.hp/G.maxHp*100,0,100)+"%";$("xpFill").style.width=clamp(G.xp/G.nextXp*100,0,100)+"%";if(G.boss)$("bossFill").style.width=clamp(G.boss.hp/G.boss.maxHp*100,0,100)+"%"}
+function endRun(){
+G.ended=true;sound("death");G.hp=0;let reward=Math.floor(G.runCoins*(1+save.perm.coins*.1));save.coins+=Math.max(0,reward-G.runCoins);save.best=Math.max(save.best,G.time);if(G.time>=90){save.coins+=CHALLENGE.bonus;G.runCoins+=CHALLENGE.bonus;flash("🌙 CHALLENGE CLEARED! +250 🪙")} for(const a of ACH)if(!save.ach.includes(a.id)&&a.check(G))save.ach.push(a.id);persist();
+$("defeatText").innerHTML=`Defeated by <b>${G.lastDefeat}</b>`;
+$("resultStats").innerHTML=`<div class="resultStat"><b>${fmtTime(G.time)}</b><small>survival</small></div><div class="resultStat"><b>${G.kills}</b><small>enemies angered</small></div><div class="resultStat"><b>${G.level}</b><small>level reached</small></div><div class="resultStat"><b>${G.bestCombo}x</b><small>best combo</small></div><div class="resultStat"><b>🪙 ${G.runCoins}</b><small>coins found</small></div><div class="resultStat"><b>${G.elites}</b><small>elites defeated</small></div>`;
+$("quote").textContent=pick(["The trash fought back.","You were doing great. Then there was a turkey.","Management would like a word.","At least the garbage truck was impressed.","You can't spell raccoon without… actually, you can."]);
+$("resultOverlay").style.display="flex";
+}
+function togglePause(){if(!G||G.ended||$("levelOverlay").style.display==="flex")return;G.paused=!G.paused;$("pauseOverlay").style.display=G.paused?"flex":"none"}
+$("pauseBtn").onclick=togglePause;$("resumeBtn").onclick=togglePause;$("quitBtn").onclick=()=>{G.ended=true;$("pauseOverlay").style.display="none";showScreen("menu");updateMenu()};$("againBtn").onclick=()=>{$("resultOverlay").style.display="none";startRun()};$("resultMenuBtn").onclick=()=>{$("resultOverlay").style.display="none";showScreen("menu");updateMenu()};
+
+let joyActive=false;
+$("joystick").addEventListener("pointerdown",e=>{joyActive=true;$("joystick").setPointerCapture(e.pointerId);moveJoy(e)});
+$("joystick").addEventListener("pointermove",e=>{if(joyActive)moveJoy(e)});
+$("joystick").addEventListener("pointerup",()=>{joyActive=false;joy.x=joy.y=0;$("knob").style.left="33px";$("knob").style.top="33px"});
+$("joystick").addEventListener("pointercancel",()=>{joyActive=false;joy.x=joy.y=0;$("knob").style.left="33px";$("knob").style.top="33px"});
+function moveJoy(e){const r=$("joystick").getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,m=Math.min(43,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);joy.x=Math.cos(a)*(m/43);joy.y=Math.sin(a)*(m/43);$("knob").style.left=(33+Math.cos(a)*m)+"px";$("knob").style.top=(33+Math.sin(a)*m)+"px"}
+updateMenu();
+try {
+  $("logoStart").onclick = function(){ startRun(); };
+  $("playBtn").onclick = function(e){ e.preventDefault(); startRun(); };
+  $("playBtn").addEventListener("touchend", function(e){ e.preventDefault(); startRun(); }, {passive:false});
+} catch(e) {}
+</script>
+</body>
+</html>
